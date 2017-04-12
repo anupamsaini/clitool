@@ -24,3 +24,6 @@ buildNumber.properties
 
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
+
+# Application specific ignored files.
+src/main/resources/META-INF/client_secrets.json
