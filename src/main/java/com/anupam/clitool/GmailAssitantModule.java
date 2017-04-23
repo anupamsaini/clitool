@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
+import com.anupam.clitool.gmail.GmailService.GmailServiceFactory;
 import com.anupam.clitool.profile.ProfileService;
 import com.anupam.clitool.profile.ProfileService.ProfileServiceFactory;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
@@ -14,6 +15,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.gmail.GmailScopes;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -25,6 +27,7 @@ public class GmailAssitantModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new FactoryModuleBuilder().build(ProfileServiceFactory.class));
+    install(new FactoryModuleBuilder().build(GmailServiceFactory.class));
   }
 
   @Provides
@@ -63,14 +66,24 @@ public class GmailAssitantModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(Constants.OAUTH_SERVICE_SCOPES)
-  public List<Scope> getOauthServiceScopes() {
-    return ImmutableList.of(Scope.PROFILE_READ, Scope.PROFILE_EMAIL);
+  @Named(Constants.PROFILE_SERVICE_SCOPES)
+  public List<Scope> getProfileServiceScopes() {
+    return ImmutableList.of(Scope.USERINFO_PROFILE_READ, Scope.USERINFO_PROFILE_EMAIL);
+  }
+
+  @Provides
+  @Singleton
+  @Named(Constants.GMAIL_SERVICE_SCOPES)
+  public List<Scope> getGmailServiceScopes() {
+    return ImmutableList.of(Scope.GMAIL_LABELS, Scope.GMAIL_META_DATA);
   }
 
   public static enum Scope {
-    PROFILE_READ("https://www.googleapis.com/auth/userinfo.profile"),
-    PROFILE_EMAIL("https://www.googleapis.com/auth/userinfo.profile");
+    USERINFO_PROFILE_READ("https://www.googleapis.com/auth/userinfo.profile"),
+    USERINFO_PROFILE_EMAIL("https://www.googleapis.com/auth/userinfo.profile"),
+
+    GMAIL_LABELS(GmailScopes.GMAIL_LABELS),
+    GMAIL_META_DATA(GmailScopes.GMAIL_METADATA);
 
     private final String scopePath;
 
