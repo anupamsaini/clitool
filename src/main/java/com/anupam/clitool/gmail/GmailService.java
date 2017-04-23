@@ -20,13 +20,12 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 
+/**
+ * Service to perform operations on user's account.
+ */
 public class GmailService {
-
-  private static final Logger logger = LogManager.getLogger(ProfileService.class.getName());
-
   private final HttpTransport httpTransport;
   private final JsonFactory jsonFactory;
-  private final GoogleClientSecrets clientSecrets;
   private final Credential credential;
 
   public interface GmailServiceFactory {
@@ -41,16 +40,14 @@ public class GmailService {
       @Assisted String userId) throws IOException {
     this.httpTransport = httpTransport;
     this.jsonFactory = jsonFactory;
-    this.clientSecrets = googleClientSecrets;
     this.credential =
         persistantCredentialManager.getInstalledAppCredential(userId, oauthServiceScopes);
   }
 
-
   /**
-   * Returns the {@code Userinfoplus} of the logged in user.
+   * Returns the {@code ListLabelsResponse} of the logged in user.
    *
-   * @return user info
+   * @return user's gmail labels
    * @throws IOException
    */
   public ListLabelsResponse getMetaData() throws IOException {

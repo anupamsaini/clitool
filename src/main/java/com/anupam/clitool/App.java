@@ -20,8 +20,8 @@ public class App {
     logger.info(profileService.tokenInfo().toPrettyString());
     logger.info(profileService.userInfo().toPrettyString());
 
-   GmailService gmailService = getGmailService("user-gmail", injector);
-   logger.info(gmailService.getMetaData());
+    GmailService gmailService = getGmailService("user-gmail", injector);
+    logger.info(gmailService.getMetaData());
   }
 
   private static ProfileService getProfileService(String user, Injector injector) {

@@ -58,10 +58,8 @@ public class GmailAssitantModule extends AbstractModule {
   @Provides
   @Singleton
   public GoogleClientSecrets getGoogleClientSecrets(JsonFactory jsonFactory) throws IOException {
-    return GoogleClientSecrets.load(
-        jsonFactory,
-        new InputStreamReader(ProfileService.class
-            .getResourceAsStream("/META-INF/client_secrets.json")));
+    return GoogleClientSecrets.load(jsonFactory, new InputStreamReader(
+        ProfileService.class.getResourceAsStream("/META-INF/client_secrets.json")));
   }
 
   @Provides
@@ -79,11 +77,11 @@ public class GmailAssitantModule extends AbstractModule {
   }
 
   public static enum Scope {
-    USERINFO_PROFILE_READ("https://www.googleapis.com/auth/userinfo.profile"),
-    USERINFO_PROFILE_EMAIL("https://www.googleapis.com/auth/userinfo.profile"),
+    USERINFO_PROFILE_READ(
+        "https://www.googleapis.com/auth/userinfo.profile"), USERINFO_PROFILE_EMAIL(
+            "https://www.googleapis.com/auth/userinfo.profile"),
 
-    GMAIL_LABELS(GmailScopes.GMAIL_LABELS),
-    GMAIL_META_DATA(GmailScopes.GMAIL_METADATA);
+    GMAIL_LABELS(GmailScopes.GMAIL_LABELS), GMAIL_META_DATA(GmailScopes.GMAIL_METADATA);
 
     private final String scopePath;
 
