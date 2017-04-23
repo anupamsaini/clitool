@@ -1,24 +1,30 @@
 package com.anupam.clitool;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.security.GeneralSecurityException;
+import java.util.List;
+
+import com.anupam.clitool.profile.ProfileService;
+import com.anupam.clitool.profile.ProfileService.ProfileServiceFactory;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.security.GeneralSecurityException;
 
 public class GmailAssitantModule extends AbstractModule {
   @Override
   protected void configure() {
-    bind(PersistantCredentialManager.class).asEagerSingleton();
+    install(new FactoryModuleBuilder().build(ProfileServiceFactory.class));
   }
 
   @Provides
@@ -51,17 +57,24 @@ public class GmailAssitantModule extends AbstractModule {
   public GoogleClientSecrets getGoogleClientSecrets(JsonFactory jsonFactory) throws IOException {
     return GoogleClientSecrets.load(
         jsonFactory,
-        new InputStreamReader(
-            OauthProfileService.class.getResourceAsStream("/META-INF/client_secrets.json")));
+        new InputStreamReader(ProfileService.class
+            .getResourceAsStream("/META-INF/client_secrets.json")));
   }
 
-  public static enum Scopes {
+  @Provides
+  @Singleton
+  @Named(Constants.OAUTH_SERVICE_SCOPES)
+  public List<Scope> getOauthServiceScopes() {
+    return ImmutableList.of(Scope.PROFILE_READ, Scope.PROFILE_EMAIL);
+  }
+
+  public static enum Scope {
     PROFILE_READ("https://www.googleapis.com/auth/userinfo.profile"),
     PROFILE_EMAIL("https://www.googleapis.com/auth/userinfo.profile");
 
     private final String scopePath;
 
-    Scopes(String path) {
+    Scope(String path) {
       this.scopePath = path;
     }
 
@@ -69,4 +82,5 @@ public class GmailAssitantModule extends AbstractModule {
       return this.scopePath;
     }
   }
+
 }

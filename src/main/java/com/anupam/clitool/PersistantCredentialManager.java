@@ -1,6 +1,6 @@
 package com.anupam.clitool;
 
-import com.anupam.clitool.GmailAssitantModule.Scopes;
+import com.anupam.clitool.GmailAssitantModule.Scope;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -26,31 +26,38 @@ public class PersistantCredentialManager {
   private final GoogleClientSecrets clientSecrets;
 
   @Inject
-  public PersistantCredentialManager(
-      JsonFactory jsonFactory,
-      HttpTransport httpTransport,
-      FileDataStoreFactory fileDataStoreFactory,
-      GoogleClientSecrets googleClientSecrets) {
+  public PersistantCredentialManager(JsonFactory jsonFactory, HttpTransport httpTransport,
+      FileDataStoreFactory fileDataStoreFactory, GoogleClientSecrets googleClientSecrets) {
     this.dataStoreFactory = fileDataStoreFactory;
     this.httpTransport = httpTransport;
     this.jsonFactory = jsonFactory;
     this.clientSecrets = googleClientSecrets;
   }
 
-  public Credential getInstalledAppCredential(String credentialId, List<Scopes> scopes) throws IOException {
+  /**
+   * Generates the {@link Credential} on the basis of passed scopes using the Oauth authentication
+   * protocol using the browser. The generated credentials are saved on file system and subsequent
+   * calls to this method returns the stored credentials.
+   * 
+   * @param credentialId the unique id used to persist the generated credentials using
+   *        {@code FileDataStoreFactory}.
+   * @param scopes the scope codes for which the credentials need to be generated
+   * @return the generated credential object.
+   * @throws IOException
+   */
+  public Credential getInstalledAppCredential(String credentialId, List<Scope> scopes)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(credentialId), "credentialId");
     Preconditions.checkArgument((scopes != null && !scopes.isEmpty()), "scopes");
 
     ImmutableList.Builder<String> passedScopes = ImmutableList.builder();
-    for (Scopes scope : scopes) {
+    for (Scope scope : scopes) {
       passedScopes.add(scope.getScopePath());
     }
 
     GoogleAuthorizationCodeFlow flow =
-        new GoogleAuthorizationCodeFlow.Builder(
-                httpTransport, jsonFactory, clientSecrets, passedScopes.build())
-            .setDataStoreFactory(dataStoreFactory)
-            .build();
+        new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory, clientSecrets,
+            passedScopes.build()).setDataStoreFactory(dataStoreFactory).build();
     return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver())
         .authorize(credentialId);
   }
