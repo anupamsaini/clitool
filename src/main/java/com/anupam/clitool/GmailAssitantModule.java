@@ -1,8 +1,6 @@
 package com.anupam.clitool;
 
-import com.anupam.clitool.gmail.GmailService.GmailServiceFactory;
 import com.anupam.clitool.profile.ProfileService;
-import com.anupam.clitool.profile.ProfileService.ProfileServiceFactory;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -13,13 +11,13 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import java.io.File;
 import java.io.IOException;
@@ -31,21 +29,6 @@ public class GmailAssitantModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(new FactoryModuleBuilder().build(ProfileServiceFactory.class));
-    install(new FactoryModuleBuilder().build(GmailServiceFactory.class));
-  }
-
-  @Provides
-  @Named("fileDataStorePath")
-  public String fileDataStorePath() {
-    return ".store/oauth2_sample";
-  }
-
-  @Provides
-  @Singleton
-  public FileDataStoreFactory getFileDataStoreFactory(
-      @Named("fileDataStorePath") String fileDataStorePath) throws IOException {
-    return new FileDataStoreFactory(new File(System.getProperty("user.home"), fileDataStorePath));
   }
 
   @Provides
@@ -64,14 +47,15 @@ public class GmailAssitantModule extends AbstractModule {
   @Singleton
   public GoogleClientSecrets getGoogleClientSecrets(JsonFactory jsonFactory) throws IOException {
     return GoogleClientSecrets.load(jsonFactory, new InputStreamReader(
-        ProfileService.class.getResourceAsStream("/META-INF/client_secrets.json")));
+        ProfileService.class.getResourceAsStream(Constants.CLIENT_SECRETS_PATH)));
   }
 
   @Provides
   @Singleton
   @Named(Constants.ALL_SERVICE_SCOPES)
   public List<Scope> getAllServiceScopes() {
-    return ImmutableList.of(Scope.GMAIL_LABELS, Scope.GMAIL_META_DATA, Scope.USERINFO_PROFILE_EMAIL,
+    return ImmutableList.of(Scope.GMAIL_LABELS, Scope.GMAIL_META_DATA, Scope.GMAIL_READ_ONY,
+        Scope.USERINFO_PROFILE_EMAIL,
         Scope.USERINFO_PROFILE_READ);
   }
 
@@ -79,8 +63,10 @@ public class GmailAssitantModule extends AbstractModule {
   @Provides
   @Singleton
   public Credential getCredential(JsonFactory jsonFactory, HttpTransport httpTransport,
-      FileDataStoreFactory fileDataStoreFactory, GoogleClientSecrets clientSecrets,
+      GoogleClientSecrets clientSecrets,
       @Named(Constants.ALL_SERVICE_SCOPES) List<Scope> scopes) throws IOException {
+    FileDataStoreFactory fileDataStoreFactory = new FileDataStoreFactory(
+        new File(System.getProperty("user.home"), Constants.FILE_DATASTORE_PATH));
     ImmutableList.Builder<String> passedScopes = ImmutableList.builder();
     for (Scope scope : scopes) {
       passedScopes.add(scope.getScopePath());
@@ -93,13 +79,22 @@ public class GmailAssitantModule extends AbstractModule {
         .authorize(Constants.CREDETNAIL_STORE_IDENTIFIER);
   }
 
+  @Inject
+  @Provides
+  public Gmail getGmailService(JsonFactory jsonFactory, HttpTransport httpTransport,
+      Credential credential) {
+    return new Gmail.Builder(httpTransport, jsonFactory, credential)
+        .setApplicationName(Constants.APPLICATION_NAME).build();
+  }
+
+
   public enum Scope {
     USERINFO_PROFILE_READ("https://www.googleapis.com/auth/userinfo.profile"),
     USERINFO_PROFILE_EMAIL("https://www.googleapis.com/auth/userinfo.profile"),
 
     GMAIL_LABELS(GmailScopes.GMAIL_LABELS),
-    GMAIL_META_DATA(GmailScopes.GMAIL_METADATA);
-
+    GMAIL_META_DATA(GmailScopes.GMAIL_METADATA),
+    GMAIL_READ_ONY(GmailScopes.GMAIL_READONLY);
 
     private final String scopePath;
 
@@ -111,5 +106,4 @@ public class GmailAssitantModule extends AbstractModule {
       return this.scopePath;
     }
   }
-
 }

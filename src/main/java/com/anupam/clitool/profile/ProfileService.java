@@ -25,11 +25,6 @@ public class ProfileService {
   private final GoogleClientSecrets clientSecrets;
   private final Credential credential;
 
-  public interface ProfileServiceFactory {
-
-    ProfileService create(String userId);
-  }
-
   @Inject
   public ProfileService(JsonFactory jsonFactory, HttpTransport httpTransport,
       GoogleClientSecrets googleClientSecrets, Credential credential) throws IOException {
@@ -63,7 +58,6 @@ public class ProfileService {
   public Userinfoplus userInfo() throws IOException {
     Oauth2 oauth2 = new Oauth2.Builder(httpTransport, jsonFactory, credential)
         .setApplicationName(Constants.APPLICATION_NAME).build();
-    Userinfoplus userinfo = oauth2.userinfo().get().execute();
-    return userinfo;
+    return oauth2.userinfo().get().execute();
   }
 }
